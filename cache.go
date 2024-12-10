@@ -18,7 +18,6 @@ var cachePath = "/var/tmp/mzcache"
 
 var ErrCacheEmptyString = errors.New("empty string passed in to cache")
 var ErrCacheCreateDirectory = errors.New("unable to create cache directory")
-var ErrCacheDirectoryNotExist = errors.New("cache directory does not exist")
 var ErrCacheCreate = errors.New("unable to create cache file")
 var ErrCacheWrite = errors.New("unable to write to cache file")
 var ErrCacheSync = errors.New("unable to sync cache file to filesystem")
@@ -115,7 +114,7 @@ func Read(key string, days int) (string, error) {
 	var result string
 	path, fullPath, hashKey := getCacheFilePath(key)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return result, errors.Join(ErrCacheDirectoryNotExist, err)
+		return result, errors.Join(ErrCacheMiss, err)
 	}
 	fileLock := flock.New(getFileLockPath(hashKey))
 	err := fileLock.Lock()

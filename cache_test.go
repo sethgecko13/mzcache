@@ -75,8 +75,8 @@ func TestReadInvalidDirectory(t *testing.T) {
 		cachePath = oldCachePath
 	}()
 	_, err := Read("invalid_directory", 1)
-	if !errors.Is(err, ErrCacheDirectoryNotExist) {
-		t.Errorf("result was incorrect, got: %v, want: %v.", err, ErrCacheDirectoryNotExist.Error())
+	if !errors.Is(err, ErrCacheMiss) {
+		t.Errorf("result was incorrect, got: %v, want: %v.", err, ErrCacheMiss.Error())
 	}
 }
 func TestReadMiss(t *testing.T) {
