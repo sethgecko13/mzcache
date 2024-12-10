@@ -17,6 +17,9 @@ This caching library does exactly what I need in ~ 150 lines of code:
 - no cache in memory.  No need for wasting memory caching data, I just need to improve over 100ms API calls. ~ 1-2ms for access a local file is good enough.
 - scales pretty well on the ext4 filesystem on linux - creates up to 65536 subdirectories to keep the number of files per directory, small enough that ext4 does not have a performance impact with multiple files in the same directory. 
 - uses gzip compression to save space.
+- returns a cache expired error so you can decide whether to return the expired cache contents and refresh for the next user, or refresh first then return.
+- small enough and simple enough that you can quickly read the code to understand/modify it to your own needs.
+- easy to debug contents by navigating on the filesystem and decompressing manually.
 
 To use this without blowing out your filesystem, you will also need to add a cron job that periodically cleans out the cache and lock files.  For example:
 
@@ -43,7 +46,7 @@ import (
 )
 
 func cache() {
-    key := "something_unique_to_cache"
+    key := "something_unique"
     value := "data to cache and more"
     err := mzcache.Write(key, value)
     if err != nil {
