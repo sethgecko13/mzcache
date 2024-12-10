@@ -44,16 +44,15 @@ import (
 
 func cache() {
     key := "something_unique_to_cache"
-    value := `data to cache
-              and more`
-	err := mzcache.Write(key, value)
-	if err != nil {
+    value := "data to cache and more"
+    err := mzcache.Write(key, value)
+    if err != nil {
         log.Printf("an error occurred: %s", err.Error())
-	}
+    }
     result, err := mzcache.Read(key)
-	if err != nil {
+    if err != nil {
         log.Printf("an error occurred: %s", err.Error())
-	}
+    }
     log.Printf("result from cache is: %s", result)
 }
 ```
