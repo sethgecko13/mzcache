@@ -1,6 +1,6 @@
 # mzcache
 
-This is my caching library created as a response to this question on reddit:
+This is a caching library created as a response to this question on reddit:
 
 https://www.reddit.com/r/golang/comments/1h4ubw9/should_i_roll_my_own_caching_server/
 
@@ -8,17 +8,32 @@ I had written this a couple of years ago because I thought it would be simpler t
 
 Overall, I think I was correct to write it myself.
 
+## Features
+
 This caching library does exactly what I need in ~ 150 lines of code:
 
-- block on subsequent calls if the cache is busy being read/written.
-- expire cache when the date rolls over.
+- blocks on subsequent calls if the cache is busy being read/written.
+- expires cache when the date rolls over.
 - no cache in memory.
-- scales on the ext4 filesystem on linux.
-- uses gzip compression.
+- scales pretty well on the ext4 filesystem on linux - creates up to 65536 subdirectories to keep the number of files per directory, small enough that ext4 does not have a performance impact with multiple files in the same directory. 
+- uses gzip compression to save space.
 
 To use this without blowing out your filesystem, you will also need to add a cron job that periodically cleans out the cache and lock files.  For example:
 
 15 0 * * * find /var/tmp/mzcache/ -type f -mtime +7 -delete
 15 0 * * * find /var/tmp/mz* -type f -mtime +1 -delete
 
-You should probably read this and use it to write your own filesystem caching routines.  The point of this is that writing a simple caching routine should not be difficult and might be superior to figuring out how to use a multi-thousand line caching program like [Varnish](https://varnish-cache.org) with it's own configuration language.
+The point of this is that writing a simple caching routine should not be difficult and might be superior to figuring out how to use a multi-thousand line caching program like [Varnish](https://varnish-cache.org) with it's own configuration language.
+
+## Limitations
+
+On the flip side, here are limitations:
+
+- caches text files only.
+- does not do buffered reads or writes.  Every file being cached is loaded entirely into memory.  This will not scale with large files or really high volumes of small files.
+- only tested on ext4 filesystem on linux and APFS on macOS.
+- uses one inode per file.  So on a typical linux installation with the ext4 filesystem, you can only cache ~ 65k files before running out of inodes.  On other filesystems, or with other formatting options, this could scale beyond 65k.
+- not terribly efficient on space.  Caching small gzipped files on ext4 still results in each file being 4096 bytes because of the default block size.
+- both read and write access to each cached file is single threaded by design to avoid race conditions.  1000 requests each accessing the same file at the same time will take access_time * 1000 to complete.  In practice this isn't a problem for my app, but might be a problem for other apps.
+
+But I would argue these are limitations you need to understand anyway, it's just not obvious when you use a 3rd party cache unless you look deeply into the code or documentation.
