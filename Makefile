@@ -1,5 +1,6 @@
 GOPATH=`go env GOPATH`/bin
 export PATH := /usr/local/go/bin:$(HOME)/go/bin:/usr/local/bin:$(PATH)
+
 test: 
 	go test
 
