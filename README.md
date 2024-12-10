@@ -27,7 +27,36 @@ To use this without blowing out your filesystem, you will also need to add a cro
 15 0 * * * find /var/tmp/mz* -type f -mtime +1 -delete
 ```
 
+Of course, you will also want to set up proactive alerting on your servers to detect runaway space usage intra-day.
+
 The point of this is that writing a simple caching routine should not be difficult and might be superior to figuring out how to use a multi-thousand line caching program like [Varnish](https://varnish-cache.org) with it's own configuration language.
+
+Maintenance is also trivial, no need for a beefy Varnish server or servers, no need for keeping up to date with the Varnish releases and security updates, etc.  Just include in your app and deploy.
+
+## Usage
+
+```
+package main
+
+import (
+	"github.com/sethgecko13/mzcache"
+)
+
+func cache() {
+    key := "something_unique_to_cache"
+    value := `data to cache
+              and more`
+	err := mzcache.Write(key, value)
+	if err != nil {
+        log.Printf("an error occurred: %s", err.Error())
+	}
+    result, err := mzcache.Read(key)
+	if err != nil {
+        log.Printf("an error occurred: %s", err.Error())
+	}
+    log.Printf("result from cache is: %s", result)
+}
+```
 
 ## Limitations
 
