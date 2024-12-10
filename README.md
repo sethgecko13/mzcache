@@ -20,10 +20,12 @@ This caching library does exactly what I need in ~ 150 lines of code:
 
 To use this without blowing out your filesystem, you will also need to add a cron job that periodically cleans out the cache and lock files.  For example:
 
+```
 ## Delete cache files every 7 days
 15 0 * * * find /var/tmp/mzcache/ -type f -mtime +7 -delete 
 ## Delete lock files every day
 15 0 * * * find /var/tmp/mz* -type f -mtime +1 -delete
+```
 
 The point of this is that writing a simple caching routine should not be difficult and might be superior to figuring out how to use a multi-thousand line caching program like [Varnish](https://varnish-cache.org) with it's own configuration language.
 
