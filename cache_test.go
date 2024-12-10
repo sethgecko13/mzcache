@@ -21,14 +21,14 @@ func testWrite() error {
 	return nil
 }
 
-func TestWriteCache(t *testing.T) {
+func TestWrite(t *testing.T) {
 	t.Parallel()
 	err := testWrite()
 	if err != nil {
 		t.Errorf("got an unexpected error: %v", err.Error())
 	}
 }
-func TestWriteCacheEmptyString(t *testing.T) {
+func TestWriteEmptyString(t *testing.T) {
 	t.Parallel()
 	value := ""
 	key := "empty"
@@ -37,7 +37,7 @@ func TestWriteCacheEmptyString(t *testing.T) {
 		t.Errorf("got %v, expected: %v", err.Error(), ErrCacheEmptyString.Error())
 	}
 }
-func TestGetCacheExpired(t *testing.T) {
+func TestReadExpired(t *testing.T) {
 	t.Parallel()
 	expected := "value1\nvalue2\nvalue3"
 	key := "expired"
@@ -51,7 +51,7 @@ func TestGetCacheExpired(t *testing.T) {
 		t.Errorf("got unexpected error: %v", err.Error())
 	}
 }
-func TestGetCacheHit(t *testing.T) {
+func TestReadHit(t *testing.T) {
 	t.Parallel()
 	expected := "value1\nvalue2\nvalue3"
 	key := "test2"
@@ -67,7 +67,7 @@ func TestGetCacheHit(t *testing.T) {
 		t.Errorf("result was incorrect, got: %v, want: %v.", result, expected)
 	}
 }
-func TestGetCacheInvalidDirectory(t *testing.T) {
+func TestReadInvalidDirectory(t *testing.T) {
 	// Don't run in parallel, will break other tests
 	oldCachePath := cachePath
 	cachePath = "/var/tmp/blah"
@@ -79,14 +79,14 @@ func TestGetCacheInvalidDirectory(t *testing.T) {
 		t.Errorf("result was incorrect, got: %v, want: %v.", err, ErrCacheDirectoryNotExist.Error())
 	}
 }
-func TestGetCacheMiss(t *testing.T) {
+func TestReadMiss(t *testing.T) {
 	t.Parallel()
 	_, err := Read("cache_miss", 1)
 	if !errors.Is(err, ErrCacheMiss) {
-		t.Errorf("Cache existed but shouldn't have")
+		t.Errorf("result was incorrect, got: %v, want: %v.", err, ErrCacheMiss.Error())
 	}
 }
-func TestGetCacheFilePath(t *testing.T) {
+func TestReadFilePath(t *testing.T) {
 	t.Parallel()
 	path, file, hashKey := getCacheFilePath("testpath")
 	if path != cachePath+"/fd/4f/" {
@@ -99,6 +99,9 @@ func TestGetCacheFilePath(t *testing.T) {
 		t.Errorf("hashKey is wrong, %v", hashKey)
 	}
 }
+
+// run write/read cycles in parallel to validate locking works properly and there
+// are no race conditions
 func TestWriteUnderLoad(t *testing.T) {
 	t.Parallel()
 	errors := []error{}
