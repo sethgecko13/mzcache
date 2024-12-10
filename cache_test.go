@@ -81,8 +81,7 @@ func TestGetCacheInvalidDirectory(t *testing.T) {
 }
 func TestGetCacheMiss(t *testing.T) {
 	t.Parallel()
-
-	_, err := Read("test3", 1)
+	_, err := Read("cache_miss", 1)
 	if !errors.Is(err, ErrCacheMiss) {
 		t.Errorf("Cache existed but shouldn't have")
 	}
