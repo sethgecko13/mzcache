@@ -37,6 +37,6 @@ jobs:
           key: ${{ runner.os }}-golint-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-golint-
-      - name: Run make ci-lint
+      - name: Run make lint
         run: |
-              make ci-lint
+              make -j2 lint
