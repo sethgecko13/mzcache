@@ -10,11 +10,11 @@ import (
 func testWrite() error {
 	expected := "value1\nvalue2\nvalue3"
 	key := "test1"
-	err := WriteCache(key, expected)
+	err := Write(key, expected)
 	if err != nil {
 		return err
 	}
-	result, _ := GetCache(key, 1)
+	result, _ := Read(key, 1)
 	if result != expected {
 		return fmt.Errorf("result was incorrect, got: %v, want: %v.", result, expected)
 	}
@@ -32,7 +32,7 @@ func TestWriteCacheEmptyString(t *testing.T) {
 	t.Parallel()
 	value := ""
 	key := "empty"
-	err := WriteCache(key, value)
+	err := Write(key, value)
 	if err != ErrCacheEmptyString {
 		t.Errorf("got %v, expected: %v", err.Error(), ErrCacheEmptyString.Error())
 	}
@@ -41,11 +41,11 @@ func TestGetCacheExpired(t *testing.T) {
 	t.Parallel()
 	expected := "value1\nvalue2\nvalue3"
 	key := "expired"
-	err := WriteCache(key, expected)
+	err := Write(key, expected)
 	if err != nil {
 		t.Errorf("got unexpected error: %v", err.Error())
 	}
-	_, err = GetCache(key, -1)
+	_, err = Read(key, -1)
 	var expiredErr *ErrCacheExpired
 	if !errors.As(err, &expiredErr) {
 		t.Errorf("got unexpected error: %v", err.Error())
@@ -55,11 +55,11 @@ func TestGetCacheHit(t *testing.T) {
 	t.Parallel()
 	expected := "value1\nvalue2\nvalue3"
 	key := "test2"
-	err := WriteCache(key, expected)
+	err := Write(key, expected)
 	if err != nil {
 		t.Errorf("got unexpected error: %v", err.Error())
 	}
-	result, err := GetCache(key, 1)
+	result, err := Read(key, 1)
 	if err != nil {
 		t.Errorf("got unexpected error: %v", err.Error())
 	}
@@ -74,7 +74,7 @@ func TestGetCacheInvalidDirectory(t *testing.T) {
 	defer func() {
 		cachePath = oldCachePath
 	}()
-	_, err := GetCache("invalid_directory", 1)
+	_, err := Read("invalid_directory", 1)
 	if !errors.Is(err, ErrCacheDirectoryNotExist) {
 		t.Errorf("result was incorrect, got: %v, want: %v.", err, ErrCacheDirectoryNotExist.Error())
 	}
@@ -82,7 +82,7 @@ func TestGetCacheInvalidDirectory(t *testing.T) {
 func TestGetCacheMiss(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetCache("test3", 1)
+	_, err := Read("test3", 1)
 	if !errors.Is(err, ErrCacheMiss) {
 		t.Errorf("Cache existed but shouldn't have")
 	}

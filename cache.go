@@ -69,7 +69,7 @@ func getCacheFilePath(key string) (path string, fullPath string, hashKey string)
 func getFileLockPath(hashKey string) string {
 	return fmt.Sprintf("%s/%s", LockPath, hashKey)
 }
-func WriteCache(key string, value string) error {
+func Write(key string, value string) error {
 	// don't write empty values they are probably errors
 	if value == "" {
 		return ErrCacheEmptyString
@@ -111,7 +111,7 @@ func WriteCache(key string, value string) error {
 	}
 	return lockError
 }
-func GetCache(key string, days int) (string, error) {
+func Read(key string, days int) (string, error) {
 	var result string
 	path, fullPath, hashKey := getCacheFilePath(key)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
