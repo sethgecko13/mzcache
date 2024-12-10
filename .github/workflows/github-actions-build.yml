@@ -1,0 +1,33 @@
+---
+name: build
+run-name: build ${{github.sha}}
+
+on:  # yamllint disable-line rule:truthy
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run make test
+        run: |
+              make test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golint-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golint-
+      - name: Run make ci-lint
+        run: |
+              make ci-lint
