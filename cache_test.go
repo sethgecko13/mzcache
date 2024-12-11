@@ -106,16 +106,16 @@ func TestWriteUnderLoad(t *testing.T) {
 	t.Parallel()
 	errors := []error{}
 	var wg sync.WaitGroup
-	var errMutex sync.Mutex
+	//	var errMutex sync.Mutex
 	for i := 0; i < 100; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			err := testWrite()
 			if err != nil {
-				errMutex.Lock()
+				//			errMutex.Lock()
 				errors = append(errors, err)
-				errMutex.Unlock()
+				//		errMutex.Unlock()
 			}
 		}()
 	}
