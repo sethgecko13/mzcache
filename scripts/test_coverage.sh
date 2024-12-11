@@ -2,7 +2,7 @@
 SHOW_DETAILS=$1
 TMP=$(mktemp)
 LIMIT=80
-go test ./... -coverprofile=$TMP || exit 1
+go test -race ./... -coverprofile=$TMP || exit 1
 TOTAL=$(go tool cover -func=$TMP | grep "total:" | awk '{print $3}' | sed -e 's/%//' | awk -F. '{print $1}') 
 if [[ $TOTAL -lt $LIMIT ]];then
     echo FAIL
