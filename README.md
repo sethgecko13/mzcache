@@ -68,7 +68,7 @@ On the flip side, there are limitations:
 - there is a little bit of a performance impact always converting string to bytes to write and then bytes back to string to read.
 - does not do buffered reads or writes.  Every file being cached is loaded entirely into memory.  This will not scale with large files or really high volumes of small files.
 - only tested on ext4 filesystem on linux and APFS on macOS, may behave differently on other filesystems.
-- uses one inode per file.  So on a typical linux installation with the ext4 filesystem, you can only cache ~ 65k files before running out of inodes.  On other filesystems, or with other formatting options, this could scale beyond 65k.
+- uses one inode per file.  So on a typical linux installation with the ext4 filesystem, you can only cache millions of files before running out of inodes.  On other filesystems, or with other formatting options, this could scale beyond millions. (Use df -iT to see how many inodes you actually have on Linux.)   But scaling might require changing the directory structure to keep the number of files per directory at a reasonable level.
 - not terribly efficient on space.  Caching small gzipped files on ext4 still results in each file being 4096 bytes minimum because of the default block size.
 - both read and write access to each cached file is single threaded by design to avoid race conditions.  1000 requests each accessing the same file at the same time will take access_time * 1000 to complete.  In practice this isn't a problem for my app, but might be a problem for other apps.
 - cache expires at midnight.  If you want different granularity, you'll have to do it differently.
