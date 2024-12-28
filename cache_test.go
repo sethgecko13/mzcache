@@ -7,6 +7,9 @@ import (
 	"testing"
 )
 
+const stdTestMessage = "result was incorrect, got: %v, want: %v."
+const errTestMessage = "result was incorrect, got error: %v"
+
 func testWrite() error {
 	expected := "value1\nvalue2\nvalue3"
 	key := "test1"
@@ -16,7 +19,7 @@ func testWrite() error {
 	}
 	result, _ := Read(key, 1)
 	if result != expected {
-		return fmt.Errorf("result was incorrect, got: %v, want: %v.", result, expected)
+		return fmt.Errorf(stdTestMessage, result, expected)
 	}
 	return nil
 }
@@ -39,16 +42,16 @@ func TestWriteEmptyString(t *testing.T) {
 }
 func TestReadExpired(t *testing.T) {
 	t.Parallel()
-	expected := "value1\nvalue2\nvalue3"
+	expected := "value1\nvalue2\nvalue3\nvalue4"
 	key := "expired"
 	err := Write(key, expected)
 	if err != nil {
-		t.Errorf("got unexpected error: %v", err.Error())
+		t.Errorf(errTestMessage, err.Error())
 	}
 	_, err = Read(key, -1)
 	var expiredErr *ErrCacheExpired
 	if !errors.As(err, &expiredErr) {
-		t.Errorf("got unexpected error: %v", err.Error())
+		t.Errorf(errTestMessage, err.Error())
 	}
 }
 func TestReadHit(t *testing.T) {
@@ -57,14 +60,14 @@ func TestReadHit(t *testing.T) {
 	key := "test2"
 	err := Write(key, expected)
 	if err != nil {
-		t.Errorf("got unexpected error: %v", err.Error())
+		t.Errorf(errTestMessage, err.Error())
 	}
 	result, err := Read(key, 1)
 	if err != nil {
-		t.Errorf("got unexpected error: %v", err.Error())
+		t.Errorf(errTestMessage, err.Error())
 	}
 	if result != expected {
-		t.Errorf("result was incorrect, got: %v, want: %v.", result, expected)
+		t.Errorf(stdTestMessage, result, expected)
 	}
 }
 func TestReadInvalidDirectory(t *testing.T) {
@@ -76,14 +79,14 @@ func TestReadInvalidDirectory(t *testing.T) {
 	}()
 	_, err := Read("invalid_directory", 1)
 	if !errors.Is(err, ErrCacheMiss) {
-		t.Errorf("result was incorrect, got: %v, want: %v.", err, ErrCacheMiss.Error())
+		t.Errorf(stdTestMessage, err, ErrCacheMiss.Error())
 	}
 }
 func TestReadMiss(t *testing.T) {
 	t.Parallel()
 	_, err := Read("cache_miss", 1)
 	if !errors.Is(err, ErrCacheMiss) {
-		t.Errorf("result was incorrect, got: %v, want: %v.", err, ErrCacheMiss.Error())
+		t.Errorf(stdTestMessage, err, ErrCacheMiss.Error())
 	}
 }
 func TestReadFilePath(t *testing.T) {
