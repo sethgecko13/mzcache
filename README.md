@@ -25,7 +25,7 @@ To use this without blowing out your filesystem, you will also need to add a cro
 
 ```
 ## Delete cache files every 7 days
-15 0 * * * find /var/tmp/mzcache/ -type f -mtime +7 -delete 
+15 0 * * * find /var/tmp/mzcache/ -type f -mtime +7 -delete  # or replace /var/tmp/mzcache/ with the contents of MZ_CACHE_DIR
 ## Delete lock files every day
 15 0 * * * find /var/tmp/mz* -type f -mtime +1 -delete
 ```
