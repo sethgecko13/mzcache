@@ -14,7 +14,6 @@ import (
 )
 
 var LockPath = getLockPath()
-var cachePath = "/var/tmp/mzcache"
 
 var ErrCacheEmptyString = errors.New("empty string passed in to cache")
 var ErrCacheCreateDirectory = errors.New("unable to create cache directory")
@@ -61,7 +60,7 @@ func hash(key string) string {
 }
 func getCacheFilePath(key string) (path string, fullPath string, hashKey string) {
 	hashKey = fmt.Sprintf("%v", hash(key))
-	path = fmt.Sprintf("%v/%v/%v/", cachePath, hashKey[0:2], hashKey[2:4])
+	path = fmt.Sprintf("%v/%v/%v/", getCacheDir(), hashKey[0:2], hashKey[2:4])
 	fullPath = fmt.Sprintf("%v%v.gz", path, hashKey[4:64])
 	return path, fullPath, hashKey
 }
@@ -157,4 +156,10 @@ func Read(key string, days int) (string, error) {
 		result = string(content)
 		return result, lockError
 	}
+}
+func getCacheDir() string {
+	if cacheDir := os.Getenv("MZ_CACHE_DIR"); cacheDir != "" {
+		return cacheDir
+	}
+	return "/var/tmp/mzcache"
 }

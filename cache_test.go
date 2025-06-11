@@ -3,6 +3,7 @@ package mzcache
 import (
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 )
@@ -70,16 +71,49 @@ func TestReadHit(t *testing.T) {
 		t.Errorf(stdTestMessage, result, expected)
 	}
 }
+
 func TestReadInvalidDirectory(t *testing.T) {
 	// Don't run in parallel, will break other tests
-	oldCachePath := cachePath
-	cachePath = "/var/tmp/blah"
+	os.Setenv("MZ_CACHE_DIR", "/var/tmp/blah")
 	defer func() {
-		cachePath = oldCachePath
+		os.Setenv("MZ_CACHE_DIR", "/var/tmp/mzcache")
 	}()
 	_, err := Read("invalid_directory", 1)
 	if !errors.Is(err, ErrCacheMiss) {
 		t.Errorf(stdTestMessage, err, ErrCacheMiss.Error())
+	}
+}
+func TestGetCacheDirEmpty(t *testing.T) {
+	// Don't run in parallel, will break other tests
+	newDir := ""
+	os.Setenv("MZ_CACHE_DIR", newDir)
+	defer func() {
+		os.Setenv("MZ_CACHE_DIR", "/var/tmp/mzcache")
+	}()
+	result := getCacheDir()
+	expected := "/var/tmp/mzcache"
+	if result != expected {
+		t.Errorf(stdTestMessage, result, expected)
+	}
+}
+func TestGetCacheDirChanged(t *testing.T) {
+	// Don't run in parallel, will break other tests
+	newDir := "/var/tmp/blah"
+	os.Setenv("MZ_CACHE_DIR", newDir)
+	defer func() {
+		os.Setenv("MZ_CACHE_DIR", "/var/tmp/mzcache")
+	}()
+	result := getCacheDir()
+	if result != newDir {
+		t.Errorf(stdTestMessage, result, newDir)
+	}
+}
+func TestGetCacheDir(t *testing.T) {
+	// Don't run in parallel, will break other tests
+	result := getCacheDir()
+	expected := "/var/tmp/mzcache"
+	if result != expected {
+		t.Errorf(stdTestMessage, result, expected)
 	}
 }
 func TestReadMiss(t *testing.T) {
@@ -92,10 +126,10 @@ func TestReadMiss(t *testing.T) {
 func TestReadFilePath(t *testing.T) {
 	t.Parallel()
 	path, file, hashKey := getCacheFilePath("testpath")
-	if path != cachePath+"/fd/4f/" {
+	if path != getCacheDir()+"/fd/4f/" {
 		t.Errorf("Cache path is wrong, %v", path)
 	}
-	if file != cachePath+"/fd/4f/62f64cf7e327dc5a460e1c3ab20b097365438a74977da31d3e93b2299247.gz" {
+	if file != getCacheDir()+"/fd/4f/62f64cf7e327dc5a460e1c3ab20b097365438a74977da31d3e93b2299247.gz" {
 		t.Errorf("Cache file is wrong, %v", file)
 	}
 	if hashKey != "fd4f62f64cf7e327dc5a460e1c3ab20b097365438a74977da31d3e93b2299247" {
