@@ -28,6 +28,8 @@ You can set two optional variables to control cache location.
 - MZ_CACHE_DIR - defaults to /var/tmp/mzcache -- this will be the location of the cache data
 - MZ_CACHE_TMP - defaults to /tmp/ -- this will be the location of the lockfiles to control concurrent cachefile access.
 
+## Scheduled Jobs
+
 To use this without blowing out your filesystem, you will also need to add a cron job that periodically cleans out the cache and lock files.  For example:
 
 ```
