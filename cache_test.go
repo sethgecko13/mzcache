@@ -83,6 +83,19 @@ func TestReadInvalidDirectory(t *testing.T) {
 		t.Errorf(stdTestMessage, err, ErrCacheMiss.Error())
 	}
 }
+func TestGetCacheLockDirEmpty(t *testing.T) {
+	// Don't run in parallel, will break other tests
+	newDir := ""
+	os.Setenv("MZ_CACHE_TMP", newDir)
+	defer func() {
+		os.Setenv("MZ_CACHE_TMP", "/var/tmp/mzcache")
+	}()
+	result := getLockDir()
+	expected := "/tmp"
+	if result != expected {
+		t.Errorf(stdTestMessage, result, expected)
+	}
+}
 func TestGetCacheDirEmpty(t *testing.T) {
 	// Don't run in parallel, will break other tests
 	newDir := ""
@@ -94,6 +107,18 @@ func TestGetCacheDirEmpty(t *testing.T) {
 	expected := "/var/tmp/mzcache"
 	if result != expected {
 		t.Errorf(stdTestMessage, result, expected)
+	}
+}
+func TestGetLockTmpChanged(t *testing.T) {
+	// Don't run in parallel, will break other tests
+	newDir := "/tmp/mzlock"
+	os.Setenv("MZ_CACHE_TMP", newDir)
+	defer func() {
+		os.Setenv("MZ_CACHE_TMP", "/tmp")
+	}()
+	result := getLockDir()
+	if result != newDir {
+		t.Errorf(stdTestMessage, result, newDir)
 	}
 }
 func TestGetCacheDirChanged(t *testing.T) {

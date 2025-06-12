@@ -40,12 +40,18 @@ func (e *ErrCacheExpired) Error() string {
 
 // since caching is so fundamental to my app, I choose to panic if caching does not work.
 // you may want to make different decisions if you use this library.
+func getLockDir() string {
+	if cacheDir := os.Getenv("MZ_CACHE_TMP"); cacheDir != "" {
+		return cacheDir
+	}
+	return "/tmp"
+}
 func getLockPath() string {
-	err := os.RemoveAll("/tmp/mz*")
+	err := os.RemoveAll(getLockDir() + "mz*")
 	if err != nil {
 		panic("unable to remove previous lock files")
 	}
-	dname, err := os.MkdirTemp("", "mz")
+	dname, err := os.MkdirTemp(getLockDir(), "mz")
 	if err != nil {
 		panic("unable to create cache lock file")
 	}
