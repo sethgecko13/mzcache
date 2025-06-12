@@ -1,6 +1,6 @@
 module github.com/sethgecko13/mzcache
 
-go 1.23.4
+go 1.23.10
 
 require github.com/gofrs/flock v0.12.1
 

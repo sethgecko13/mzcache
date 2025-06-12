@@ -21,13 +21,22 @@ This caching library does exactly what I need in ~ 150 lines of code:
 - small enough and simple enough that you can quickly read the code to understand/modify it to your own needs.
 - easy to debug contents by navigating on the filesystem and decompressing manually.
 
+## Variables
+
+You can set two optional variables to control cache location.
+
+- MZ_CACHE_DIR - defaults to /var/tmp/mzcache -- this will be the location of the cache data
+- MZ_CACHE_TMP - defaults to /tmp/ -- this will be the location of the lockfiles to control concurrent cachefile access.
+
+## Scheduled Jobs
+
 To use this without blowing out your filesystem, you will also need to add a cron job that periodically cleans out the cache and lock files.  For example:
 
 ```
 ## Delete cache files every 7 days
-15 0 * * * find /var/tmp/mzcache/ -type f -mtime +7 -delete 
+15 0 * * * find /var/tmp/mzcache/ -type f -mtime +7 -delete  # or replace /var/tmp/mzcache/ with the contents of MZ_CACHE_DIR
 ## Delete lock files every day
-15 0 * * * find /var/tmp/mz* -type f -mtime +1 -delete
+15 0 * * * find /tmp/mz* -type f -mtime +1 -delete # or replace /tmp/ with the contents of MZ_CACHE_TMP
 ```
 
 Of course, you will also want to set up proactive alerting on your servers to detect runaway space usage intra-day.
