@@ -6,6 +6,7 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 )
 
 const stdTestMessage = "result was incorrect, got: %v, want: %v."
@@ -72,6 +73,19 @@ func TestReadHit(t *testing.T) {
 	}
 }
 
+func TestCreateCacheDirectory(t *testing.T) {
+	// Don't run in parallel, will break other tests
+	newDir := "/var/tmp/blah" + time.RFC3339Nano
+	os.Setenv("MZ_CACHE_DIR", newDir)
+	defer func() {
+		os.Setenv("MZ_CACHE_DIR", "/var/tmp/mzcache")
+	}()
+	err := createCacheDir()
+	if err != nil {
+		t.Errorf(errTestMessage, err)
+	}
+	os.RemoveAll(newDir)
+}
 func TestReadInvalidDirectory(t *testing.T) {
 	// Don't run in parallel, will break other tests
 	os.Setenv("MZ_CACHE_DIR", "/var/tmp/blah")
