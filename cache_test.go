@@ -6,6 +6,7 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 )
 
 const stdTestMessage = "result was incorrect, got: %v, want: %v."
@@ -72,6 +73,19 @@ func TestReadHit(t *testing.T) {
 	}
 }
 
+func TestCreateCacheDirectory(t *testing.T) {
+	// Don't run in parallel, will break other tests
+	newDir := "/var/tmp/blah" + time.RFC3339Nano
+	os.Setenv("MZ_CACHE_DIR", newDir)
+	defer func() {
+		os.Setenv("MZ_CACHE_DIR", "/var/tmp/mzcache")
+	}()
+	err := createCacheDir()
+	if err != nil {
+		t.Errorf(errTestMessage, err)
+	}
+	os.RemoveAll(newDir)
+}
 func TestReadInvalidDirectory(t *testing.T) {
 	// Don't run in parallel, will break other tests
 	os.Setenv("MZ_CACHE_DIR", "/var/tmp/blah")
@@ -81,19 +95,6 @@ func TestReadInvalidDirectory(t *testing.T) {
 	_, err := Read("invalid_directory", 1)
 	if !errors.Is(err, ErrCacheMiss) {
 		t.Errorf(stdTestMessage, err, ErrCacheMiss.Error())
-	}
-}
-func TestGetCacheLockDirEmpty(t *testing.T) {
-	// Don't run in parallel, will break other tests
-	newDir := ""
-	os.Setenv("MZ_CACHE_TMP", newDir)
-	defer func() {
-		os.Setenv("MZ_CACHE_TMP", "/var/tmp/mzcache")
-	}()
-	result := getLockDir()
-	expected := "/tmp"
-	if result != expected {
-		t.Errorf(stdTestMessage, result, expected)
 	}
 }
 func TestGetCacheDirEmpty(t *testing.T) {
@@ -107,18 +108,6 @@ func TestGetCacheDirEmpty(t *testing.T) {
 	expected := "/var/tmp/mzcache"
 	if result != expected {
 		t.Errorf(stdTestMessage, result, expected)
-	}
-}
-func TestGetLockTmpChanged(t *testing.T) {
-	// Don't run in parallel, will break other tests
-	newDir := "/tmp/mzlock"
-	os.Setenv("MZ_CACHE_TMP", newDir)
-	defer func() {
-		os.Setenv("MZ_CACHE_TMP", "/tmp")
-	}()
-	result := getLockDir()
-	if result != newDir {
-		t.Errorf(stdTestMessage, result, newDir)
 	}
 }
 func TestGetCacheDirChanged(t *testing.T) {
