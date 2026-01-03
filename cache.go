@@ -113,6 +113,26 @@ func Write(key string, value string) error {
 	}
 	return lockError
 }
+func Delete(key string) error {
+	_, fullPath, hashKey := getCacheFilePath(key)
+	fileLock := flock.New(getFileLockPath(hashKey))
+	err := fileLock.Lock()
+	if err != nil {
+		return errors.Join(ErrCacheLock, err)
+	}
+	var lockError error
+	defer func() {
+		err = fileLock.Unlock()
+		if err != nil {
+			lockError = errors.Join(ErrCacheUnlock, err)
+		}
+	}()
+	err = os.Remove(fullPath)
+	if err != nil {
+		return err
+	}
+	return lockError
+}
 func Read(key string, days int) (string, error) {
 	var result string
 	path, fullPath, hashKey := getCacheFilePath(key)
