@@ -25,7 +25,23 @@ func testWrite() error {
 	}
 	return nil
 }
-
+func TestDelete(t *testing.T) {
+	t.Parallel()
+	key := "todelete"
+	value := "value1\nvalue2\nvalue3"
+	err := Write(key, value)
+	if err != nil {
+		t.Errorf(errTestMessage, err.Error())
+	}
+	err = Delete(key)
+	if err != nil {
+		t.Errorf(errTestMessage, err.Error())
+	}
+	_, err = Read(key, 1)
+	if !errors.Is(err, ErrCacheMiss) {
+		t.Errorf(stdTestMessage, err, ErrCacheMiss.Error())
+	}
+}
 func TestWrite(t *testing.T) {
 	t.Parallel()
 	err := testWrite()
