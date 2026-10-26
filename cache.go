@@ -8,21 +8,18 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
-
-	"github.com/gofrs/flock"
 )
 
-var LockPath = getLockPath()
+// one mutex per hashKey, so operations on different keys don't block each other.
+var locks sync.Map
 
 var ErrCacheEmptyString = errors.New("empty string passed in to cache")
 var ErrCacheCreateDirectory = errors.New("unable to create cache directory")
 var ErrCacheCreate = errors.New("unable to create cache file")
 var ErrCacheWrite = errors.New("unable to write to cache file")
 var ErrCacheSync = errors.New("unable to sync cache file to filesystem")
-
-var ErrCacheLock = errors.New("unable to lock cache file")
-var ErrCacheUnlock = errors.New("unable to unlock cache file")
 
 var ErrCacheMiss = errors.New("cache file does not exist")
 var ErrCacheDecompress = errors.New("unable to decompress cache file")
@@ -38,23 +35,6 @@ func (e *ErrCacheExpired) Error() string {
 	return fmt.Sprintf("cache expired %s", e.FullPath)
 }
 
-// since caching is so fundamental to my app, I choose to panic if caching does not work.
-// you may want to make different decisions if you use this library.
-func getLockPath() string {
-	err := createCacheDir()
-	if err != nil {
-		panic("unable to create cache dir")
-	}
-	err = os.RemoveAll(getCacheDir() + "mz*")
-	if err != nil {
-		panic("unable to remove previous lock files")
-	}
-	dname, err := os.MkdirTemp(getCacheDir(), "mz")
-	if err != nil {
-		panic("unable to create cache lock file")
-	}
-	return dname
-}
 func hash(key string) string {
 	h := sha256.New()
 	h.Write([]byte(key))
@@ -68,8 +48,9 @@ func getCacheFilePath(key string) (path string, fullPath string, hashKey string)
 	fullPath = fmt.Sprintf("%v%v.gz", path, hashKey[4:64])
 	return path, fullPath, hashKey
 }
-func getFileLockPath(hashKey string) string {
-	return fmt.Sprintf("%s/%s", LockPath, hashKey)
+func getLock(hashKey string) *sync.Mutex {
+	lock, _ := locks.LoadOrStore(hashKey, &sync.Mutex{})
+	return lock.(*sync.Mutex)
 }
 func Write(key string, value string) error {
 	// don't write empty values they are probably errors
@@ -83,18 +64,9 @@ func Write(key string, value string) error {
 			return errors.Join(ErrCacheCreateDirectory, err)
 		}
 	}
-	fileLock := flock.New(getFileLockPath(hashKey))
-	err := fileLock.Lock()
-	if err != nil {
-		return errors.Join(ErrCacheLock, err)
-	}
-	var lockError error
-	defer func() {
-		err = fileLock.Unlock()
-		if err != nil {
-			lockError = errors.Join(ErrCacheUnlock, err)
-		}
-	}()
+	lock := getLock(hashKey)
+	lock.Lock()
+	defer lock.Unlock()
 	// no need to remove file, this causes race conditions, create removes previous contents
 	file, err := os.Create(filepath.Clean(fullPath))
 	if err != nil {
@@ -111,27 +83,14 @@ func Write(key string, value string) error {
 	if err != nil {
 		return errors.Join(ErrCacheSync, err)
 	}
-	return lockError
+	return nil
 }
 func Delete(key string) error {
 	_, fullPath, hashKey := getCacheFilePath(key)
-	fileLock := flock.New(getFileLockPath(hashKey))
-	err := fileLock.Lock()
-	if err != nil {
-		return errors.Join(ErrCacheLock, err)
-	}
-	var lockError error
-	defer func() {
-		err = fileLock.Unlock()
-		if err != nil {
-			lockError = errors.Join(ErrCacheUnlock, err)
-		}
-	}()
-	err = os.Remove(fullPath)
-	if err != nil {
-		return err
-	}
-	return lockError
+	lock := getLock(hashKey)
+	lock.Lock()
+	defer lock.Unlock()
+	return os.Remove(fullPath)
 }
 func Read(key string, days int) (string, error) {
 	var result string
@@ -139,18 +98,9 @@ func Read(key string, days int) (string, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return result, errors.Join(ErrCacheMiss, err)
 	}
-	fileLock := flock.New(getFileLockPath(hashKey))
-	err := fileLock.Lock()
-	if err != nil {
-		return result, errors.Join(ErrCacheLock, err)
-	}
-	var lockError error
-	defer func() {
-		err = fileLock.Unlock()
-		if err != nil {
-			lockError = errors.Join(ErrCacheUnlock, err)
-		}
-	}()
+	lock := getLock(hashKey)
+	lock.Lock()
+	defer lock.Unlock()
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		return result, errors.Join(ErrCacheMiss, err)
 	} else {
@@ -178,7 +128,7 @@ func Read(key string, days int) (string, error) {
 			return result, errors.Join(ErrCacheRead, err)
 		}
 		result = string(content)
-		return result, lockError
+		return result, nil
 	}
 }
 func createCacheDir() error {

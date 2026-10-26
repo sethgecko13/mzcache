@@ -1,21 +1,35 @@
----
+version: "2"
 linters:
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
     - bodyclose
     - exhaustive
     - gocheckcompilerdirectives
     - godox
+    - gosec
+    - usestdlibvars
+    - whitespace
+  settings:
+    staticcheck:
+      checks:
+        - all
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
     - gofmt
     - goimports
-    - gosec
-    - whitespace
-    - usestdlibvars
-linters-settings:
-  staticcheck:
-    checks: ["all"]
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

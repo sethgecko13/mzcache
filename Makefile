@@ -11,7 +11,7 @@ vuln: install-govulncheck
 	govulncheck ./...
 
 install-golang-ci: 
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 
 ci-lint: install-golang-ci
 	golangci-lint run ./...
